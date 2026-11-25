@@ -1,0 +1,4 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>{% block title %}thxou{% endblock %}</title><link rel="stylesheet" href="{{ url_for('static', filename='pico.min.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}"></head>
+<body><header class="container"><nav><a href="{{ url_for('main.home') }}"><strong>thxou</strong></a><span><a href="{{ url_for('main.profile') if g.user else url_for('main.sign_in') }}">Profile</a></span></nav></header><main class="container">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<p role="alert" class="{{ category }}">{{ message }}</p>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main><script src="{{ url_for('static', filename='app.js') }}" defer></script></body></html>
