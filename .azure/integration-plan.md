@@ -17,7 +17,7 @@
 ## API routes
 - GET `/api/health`
 - GET `/`, `/sign-in`, `/profile`, `/contests/new`, `/c/<id>`, `/c/<id>/leaderboard`
-- POST `/auth/otp/request`, `/auth/otp/verify`, `/auth/refresh`, `/auth/logout`
+- POST `/auth/family`, `/auth/refresh`, `/auth/logout`
 - POST `/profile`, `/contests`, `/c/<id>/ballot`, `/c/<id>/questions/<question_id>/resolve`
 - GET `/api/contests/<id>/leaderboard`
 
@@ -28,5 +28,6 @@
 - RPCs: `upsert_my_profile`, `get_contest_invitation`, `list_my_contests`, `get_leaderboard`
 
 ## Services
-- Essential: Flask/Vercel, Supabase PostgreSQL Data API, Supabase Auth, Twilio, Cloudflare Turnstile
+- Essential: Flask/Vercel, Supabase PostgreSQL Data API, Supabase Auth anonymous sign-ins, server-only `FAMILY_ACCESS_CODE`
+- Temporary event mode supersedes the original phone-OTP plan. Twilio and Turnstile are not required; see README.md for settings and the path back to verified authentication.
 - Enhancement: polling (manual refresh remains available)

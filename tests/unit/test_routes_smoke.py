@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import re
 
 from thxou import create_app
 from thxou.routes import safe_next
@@ -28,17 +29,31 @@ def rpc_result(name, payload=None):
             "title": "Test contest",
             "description": "",
             "creator_timezone": "America/New_York",
+            "deadline_display": "January 15, 2027 at 12:00 PM America/New_York",
+            "published_at": "2026-11-25T23:00:00Z",
+            "phase": "open",
+            "is_creator": True,
+            "can_edit": True,
+            "can_publish": False,
+            "can_submit": True,
+            "can_view_leaderboard": True,
+            "results_visible": True,
             "questions": [{"id": QUESTION_ID, "text": "Will this work?"}],
             "answers": {},
             "version": 0,
         }
     if name == "get_leaderboard":
         return {
+            "title": "Test contest",
+            "deadline_display": "January 15, 2027 at 12:00 PM America/New_York",
+            "is_creator": True,
+            "can_resolve": False,
             "phase": "open",
             "resolved_count": 0,
             "question_count": 1,
             "as_of": "2026-11-25T23:00:00Z",
             "standings": [],
+            "questions": [{"id": QUESTION_ID, "text": "Will this work?", "resolved": False, "correct_answer": None}],
         }
     return None
 
@@ -49,6 +64,7 @@ def test_all_documented_routes_respond_without_external_calls():
             "TESTING": True,
             "SUPABASE_URL": "https://example.supabase.co",
             "SUPABASE_PUBLISHABLE_KEY": "test-publishable-key",
+            "FAMILY_ACCESS_CODE": "test-event-code",
         }
     )
     client = app.test_client()
@@ -58,12 +74,6 @@ def test_all_documented_routes_respond_without_external_calls():
         patch("thxou.routes.current_user", return_value={"id": "user"}),
         patch("thxou.auth.current_user", return_value={"id": "user"}),
         patch.object(SupabaseGateway, "rpc", autospec=True, side_effect=lambda self, name, payload=None: rpc_result(name, payload)),
-        patch.object(SupabaseGateway, "request_otp"),
-        patch.object(
-            SupabaseGateway,
-            "verify_otp",
-            return_value={"access_token": "access", "refresh_token": "refresh"},
-        ),
         patch.object(
             SupabaseGateway,
             "refresh_session",
@@ -73,11 +83,13 @@ def test_all_documented_routes_respond_without_external_calls():
     ):
         assert client.get("/api/health").status_code == 200
         assert client.get("/").status_code == 200
-        assert client.get("/sign-in").status_code == 200
-        assert client.post("/auth/otp/request", data={"phone": "+15555550100"}).status_code == 200
+        sign_in = client.get("/sign-in")
+        assert sign_in.status_code == 200
+        client.set_cookie("access_token", "access")
+        csrf = re.search(rb'name="csrf" value="([^"]+)"', sign_in.data).group(1).decode()
         assert client.post(
-            "/auth/otp/verify",
-            data={"phone": "+15555550100", "code": "000000"},
+            "/auth/family",
+            data={"access_code": "test-event-code", "name": "Test User", "username": "tester", "csrf": csrf},
         ).status_code == 302
         client.set_cookie("refresh_token", "refresh")
         assert client.post("/auth/refresh").status_code == 204

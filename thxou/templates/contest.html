@@ -1,1 +1,51 @@
-{% extends "base.html" %}{% block title %}Contest · thxou{% endblock %}{% block content %}<h1>{{ contest.title if contest else "Contest" }}</h1>{% if contest %}<p>{{ contest.description or "" }}</p><form method="post" action="{{ url_for('main.ballot', contest_id=contest_id) }}">{% for question in contest.questions|default([]) %}{% set saved = contest.answers.get(question.id|string) if contest.answers else none %}<fieldset><legend>{{ question.text }}</legend><label><input type="radio" name="answer" value="{{ question.id }}:true" {% if saved is sameas true %}checked{% endif %} required> Yes</label><label><input type="radio" name="answer" value="{{ question.id }}:false" {% if saved is sameas false %}checked{% endif %}> No</label></fieldset>{% endfor %}<input type="hidden" name="version" value="{{ contest.version|default(0, true) }}"><button>Save ballot</button></form>{% else %}<p>This contest is unavailable.</p>{% endif %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ contest.title if contest else "Contest" }} · thxou{% endblock %}
+{% block content %}
+{% if contest %}
+<nav aria-label="Contest navigation"><a href="{{ url_for('main.home') }}">My contests</a>{% if contest.can_view_leaderboard %}<a href="{{ url_for('main.leaderboard', contest_id=contest_id) }}">Leaderboard</a>{% endif %}</nav>
+<h1>{{ contest.title }}</h1>
+<p><strong>Status:</strong> {{ contest.phase|capitalize }} · <strong>Deadline:</strong> {{ contest.deadline_display }}</p>
+{% if contest.description %}<p>{{ contest.description }}</p>{% endif %}
+
+{% if contest.is_creator %}
+<section aria-labelledby="creator-actions"><h2 id="creator-actions">Creator actions</h2>
+<div class="action-bar">
+  {% if contest.can_edit %}<a role="button" href="{{ url_for('main.edit_contest', contest_id=contest_id) }}">Edit</a>{% endif %}
+  {% if contest.published_at is none %}
+  <form method="post" action="{{ url_for('main.publish', contest_id=contest_id) }}"><button {% if not contest.can_publish %}disabled title="A future deadline and 1–30 questions are required"{% endif %}>Publish</button></form>
+  {% endif %}
+  <a role="button" class="secondary" href="{{ url_for('main.leaderboard', contest_id=contest_id) }}">Leaderboard</a>
+</div>
+<label>Stable share URL
+  <span class="copy-row"><input data-share-url readonly value="{{ url_for('main.contest', contest_id=contest_id, _external=True) }}"><button type="button" data-copy-share>Copy link</button></span>
+</label>
+<p class="muted" data-copy-status>{% if contest.published_at is none %}Publish before sharing; this URL will not change.{% else %}Anyone with this link can open the contest after signing in.{% endif %}</p>
+</section>
+{% endif %}
+
+{% if contest.published_at is none %}
+<p>This draft is visible only to you. Publish it when it is ready.</p>
+{% elif contest.can_submit %}
+<form method="post" action="{{ url_for('main.ballot', contest_id=contest_id) }}">
+{% for question in contest.questions|default([]) %}
+{% set saved = contest.answers.get(question.id|string) if contest.answers else none %}
+<fieldset><legend>{{ question.text }}</legend>
+  <label><input type="radio" name="answer" value="{{ question.id }}:true" {% if saved is sameas true %}checked{% endif %} required> Yes</label>
+  <label><input type="radio" name="answer" value="{{ question.id }}:false" {% if saved is sameas false %}checked{% endif %}> No</label>
+  {% if contest.results_visible and question.resolved is sameas true %}<p class="result">Final result: {{ "Yes" if question.correct_answer else "No" }}</p>{% endif %}
+</fieldset>
+{% endfor %}
+<input type="hidden" name="version" value="{{ contest.version|default(0, true) }}">
+<button>Save complete ballot</button>
+</form>
+{% else %}
+<p>Ballot entry is closed.</p>
+{% if contest.results_visible %}
+<h2>Results</h2>
+<ul>{% for question in contest.questions|default([]) %}<li>{{ question.text }} — {% if question.resolved %}<strong>{{ "Yes" if question.correct_answer else "No" }}</strong>{% else %}Unresolved{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% endif %}
+{% else %}
+<h1>Contest unavailable</h1><p>This contest does not exist or is a private draft.</p><p><a href="{{ url_for('main.home') }}">Back to my contests</a></p>
+{% endif %}
+{% endblock %}

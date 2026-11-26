@@ -1,1 +1,15 @@
-{% extends "base.html" %}{% block title %}Sign in · thxou{% endblock %}{% block content %}<h1>Sign in</h1><p>We'll send a one-time code to your phone.</p><form method="post" action="{{ url_for('main.otp_request') }}"><input type="hidden" name="next" value="{{ next_path }}"><label>Country<select name="country"><option>United States (+1)</option></select></label><label>Phone<input name="phone" type="tel" autocomplete="tel" value="{{ pending_phone|default('') }}" required></label><input type="hidden" name="captcha_token" value=""><button>Send code</button></form>{% if sent %}<form method="post" action="{{ url_for('main.otp_verify') }}"><input type="hidden" name="next" value="{{ next_path }}"><input type="hidden" name="phone" value="{{ pending_phone }}"><label>Code<input name="code" inputmode="numeric" autocomplete="one-time-code" required></label><button>Verify code</button></form>{% endif %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Sign in · thxou{% endblock %}
+{% block content %}
+<h1>Family sign-in</h1>
+<p>Enter the shared access code from your host and choose your name and username.</p>
+<p class="muted">Use this same browser throughout the event. Signing out, clearing cookies, or switching devices loses access to this account. A username does not recover it.</p>
+<form method="post" action="{{ url_for('main.family_sign_in') }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="next" value="{{ next_path }}">
+  <label>Family access code<input name="access_code" type="password" autocomplete="off" required></label>
+  <label>Name<input name="name" value="{{ name|default('') }}" autocomplete="name" maxlength="80" required></label>
+  <label>Username<input name="username" value="{{ username|default('') }}" autocomplete="username" pattern="[A-Za-z][A-Za-z0-9_]{2,23}" minlength="3" maxlength="24" required></label>
+  <button>Join the event</button>
+</form>
+{% endblock %}

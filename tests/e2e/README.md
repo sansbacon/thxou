@@ -1,4 +1,5 @@
 # End-to-end tests
 
-Playwright fixtures belong here once a nonproduction Supabase Auth project and
-test phones are configured. CI must not send real SMS.
+Live browser validation requires a nonproduction Supabase project with anonymous
+sign-ins enabled and a server-only FAMILY_ACCESS_CODE. See README.md for setup.
+The default tests do not create real accounts or database rows.

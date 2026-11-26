@@ -1,1 +1,27 @@
-{% extends "base.html" %}{% block title %}Contest editor · thxou{% endblock %}{% block content %}<h1>{{ "Edit contest" if contest else "Create a contest" }}</h1><form method="post" action="{{ url_for('main.edit_contest', contest_id=contest.id) if contest else url_for('main.create_contest') }}"><label>Title<input name="title" value="{{ contest.title|default('') if contest else '' }}" maxlength="120" required></label><label>Description<textarea name="description" maxlength="1000">{{ contest.description|default('') if contest else '' }}</textarea></label><label>Deadline<input name="deadline" value="{{ contest.deadline_local|default('') if contest else '' }}" type="datetime-local" required></label><label>Timezone<input name="timezone" value="{{ contest.creator_timezone|default('America/New_York') if contest else 'America/New_York' }}" required></label><label>UTC offset for an ambiguous daylight-saving time (optional)<input name="timezone_offset" placeholder="-05:00"></label><fieldset><legend>Questions</legend>{% set questions = contest.questions if contest and contest.questions else [none, none, none] %}{% for question in questions %}<input name="question" value="{{ question.text|default('') if question else '' }}" maxlength="300" placeholder="Yes/No question {{ loop.index }}" {% if loop.first %}required{% endif %}>{% endfor %}</fieldset><button>{{ "Save changes" if contest else "Create draft" }}</button></form>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Contest editor · thxou{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('main.contest', contest_id=contest.id) if contest else url_for('main.home') }}">← {{ "Back to contest" if contest else "My contests" }}</a></p>
+<h1>{{ "Edit contest" if contest else "Create a contest" }}</h1>
+<form method="post" action="{{ url_for('main.edit_contest', contest_id=contest.id) if contest else url_for('main.create_contest') }}">
+<label>Title<input name="title" value="{{ contest.title|default('') if contest else '' }}" maxlength="120" required></label>
+<label>Description<textarea name="description" maxlength="1000">{{ contest.description|default('') if contest else '' }}</textarea></label>
+<label>Deadline<input name="deadline" value="{{ contest.deadline_local|default('') if contest else '' }}" type="datetime-local" required></label>
+<label>Timezone<input name="timezone" value="{{ contest.creator_timezone|default('America/New_York') if contest else 'America/New_York' }}" required></label>
+<label>UTC offset for an ambiguous daylight-saving time (optional)<input name="timezone_offset" placeholder="-05:00"></label>
+<fieldset id="questions"><legend>Questions (1–30)</legend>
+{% set existing = contest.questions if contest and contest.questions else [] %}
+{% for index in range(30) %}{% set question = existing[index] if index < existing|length else none %}
+<div class="question-row" data-question-row>
+  <label>Question <span data-question-number>{{ index + 1 }}</span>
+    <input name="question" value="{{ question.text|default('') if question else '' }}" maxlength="300" placeholder="A Yes/No question" {% if index == 0 %}required{% endif %}>
+  </label>
+  <button type="button" class="secondary" data-remove-question>Remove</button>
+</div>
+{% endfor %}
+</fieldset>
+<button type="button" class="secondary" data-add-question>Add question</button>
+<p class="muted">Without JavaScript, leave unused question fields blank.</p>
+<button>{{ "Save changes" if contest else "Create draft" }}</button>
+</form>
+{% endblock %}

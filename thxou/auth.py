@@ -7,14 +7,19 @@ def _client():
     return httpx.Client(base_url=current_app.config["SUPABASE_URL"], timeout=current_app.config["DATA_TIMEOUT"])
 
 
-def current_user():
+def current_user(*, raise_on_error=False):
     token = request.cookies.get("access_token")
     if not token or not current_app.config["SUPABASE_URL"]:
         return None
     try:
-        response = _client().get("/auth/v1/user", headers={"apikey": current_app.config["SUPABASE_PUBLISHABLE_KEY"], "Authorization": f"Bearer {token}"})
+        with _client() as client:
+            response = client.get("/auth/v1/user", headers={"apikey": current_app.config["SUPABASE_PUBLISHABLE_KEY"], "Authorization": f"Bearer {token}"})
+        if raise_on_error and response.status_code not in (401, 403):
+            response.raise_for_status()
         return response.json() if response.is_success else None
     except httpx.HTTPError:
+        if raise_on_error:
+            raise
         return None
 
 

@@ -4,6 +4,13 @@
 **Created**: 2026-11-25
 **Mode**: NEW
 
+**2026-11-26 temporary event override**: The user approved server-checked
+`FAMILY_ACCESS_CODE` with Supabase anonymous authentication, name/username profile
+upsert, and existing auth cookies. No phone collection, Twilio, or Turnstile in
+the active flow. Preserve the PostgreSQL schema/RLS/RPC actor model. README.md
+documents current setup and limitations; phone-OTP requirements below describe
+the longer-term design, not today's prerequisites.
+
 ---
 
 ## 1. Project Overview

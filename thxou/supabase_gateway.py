@@ -22,19 +22,10 @@ class SupabaseGateway:
             return response.json()
 
     @classmethod
-    def request_otp(cls, phone, captcha_token):
+    def sign_in_anonymously(cls):
         headers = {"apikey": current_app.config["SUPABASE_PUBLISHABLE_KEY"]}
-        payload = {"phone": phone, "options": {"captcha_token": captcha_token}}
         with httpx.Client(base_url=current_app.config["SUPABASE_URL"], timeout=current_app.config["DATA_TIMEOUT"]) as client:
-            response = client.post("/auth/v1/otp", headers=headers, json=payload)
-            response.raise_for_status()
-
-    @classmethod
-    def verify_otp(cls, phone, code):
-        headers = {"apikey": current_app.config["SUPABASE_PUBLISHABLE_KEY"]}
-        payload = {"phone": phone, "token": code, "type": "sms"}
-        with httpx.Client(base_url=current_app.config["SUPABASE_URL"], timeout=current_app.config["DATA_TIMEOUT"]) as client:
-            response = client.post("/auth/v1/verify", headers=headers, json=payload)
+            response = client.post("/auth/v1/signup", headers=headers, json={})
             response.raise_for_status()
             return response.json()
 

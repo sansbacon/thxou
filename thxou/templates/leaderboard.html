@@ -1,1 +1,37 @@
-{% extends "base.html" %}{% block title %}Standings · thxou{% endblock %}{% block content %}<h1>Standings</h1><p id="status" class="muted">Loading…</p><table><thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead><tbody id="standings"></tbody></table><noscript><p>Refresh this page to see updated standings.</p></noscript><script>window.THXOU_CONTEST_ID="{{ contest_id }}";</script>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Leaderboard · thxou{% endblock %}
+{% block content %}
+{% if leaderboard %}
+<p><a href="{{ url_for('main.contest', contest_id=contest_id) }}">← Back to contest</a></p>
+<h1>{{ leaderboard.title }} leaderboard</h1>
+<p><strong>Status:</strong> {{ leaderboard.phase|capitalize }} · <strong>Deadline:</strong> {{ leaderboard.deadline_display }}</p>
+<p id="status" class="muted">Scores as of {{ leaderboard.as_of }}</p>
+<table data-contest-id="{{ contest_id }}"><thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
+<tbody id="standings">{% for player in leaderboard.standings %}<tr><td>{{ player.rank }}</td><td>{{ player.username }}</td><td>{{ player.score }}</td></tr>{% else %}<tr data-empty><td colspan="3">No ballots yet.</td></tr>{% endfor %}</tbody></table>
+<noscript><p>Refresh this page to see updated standings.</p></noscript>
+
+{% if leaderboard.is_creator %}
+<section aria-labelledby="results-heading"><h2 id="results-heading">Enter results</h2>
+{% if leaderboard.phase == "draft" %}<p>Publish this contest before entering results.</p>
+{% elif not leaderboard.can_resolve and leaderboard.phase == "open" %}<p>Result entry opens at the deadline.</p>
+{% endif %}
+{% for question in leaderboard.questions %}
+<article><strong>{{ loop.index }}. {{ question.text }}</strong>
+{% if question.resolved %}
+  <p class="result">Final result: {{ "Yes" if question.correct_answer else "No" }} (immutable)</p>
+{% elif leaderboard.can_resolve %}
+  <form method="post" action="{{ url_for('main.resolve', contest_id=contest_id, question_id=question.id) }}">
+    <button name="correct_answer" value="true">Yes</button>
+    <button name="correct_answer" value="false" class="secondary">No</button>
+    <input type="hidden" name="confirmation" value="yes">
+    <small>Saving is final and cannot be changed.</small>
+  </form>
+{% else %}<p>Unresolved</p>{% endif %}
+</article>
+{% endfor %}
+</section>
+{% endif %}
+{% else %}
+<h1>Leaderboard unavailable</h1><p>Only the creator and participants can view standings.</p><p><a href="{{ url_for('main.contest', contest_id=contest_id) }}">Back to contest</a></p>
+{% endif %}
+{% endblock %}
